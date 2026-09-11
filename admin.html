@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>BarberGo Admin — Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.454.0"></script>
+<style>
+:root{
+  --cream:#F4EEE1; --cream2:#EAE2CF; --paper:#FBF7EC;
+  --ink:#191813; --ink60:rgba(25,24,19,.6); --ink45:rgba(25,24,19,.45);
+  --green:#1E4B38; --deep:#123527; --orange:#E4572E;
+  --line:rgba(25,24,19,.16); --linec:rgba(244,238,225,.2);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',sans-serif;background:var(--cream);color:var(--ink);
+  -webkit-font-smoothing:antialiased;line-height:1.5;min-height:100svh}
+::selection{background:var(--orange);color:var(--cream)}
+::-webkit-scrollbar{width:10px;height:8px}
+::-webkit-scrollbar-track{background:var(--cream)}
+::-webkit-scrollbar-thumb{background:rgba(25,24,19,.3);border-radius:99px}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+button{font-family:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+.lucide{width:1.1em;height:1.1em;flex:none}
+[hidden]{display:none!important}
+
+.noise{position:fixed;inset:0;z-index:900;pointer-events:none;opacity:.05;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+.display{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;line-height:.94;letter-spacing:.005em}
+.mono-xs{font-family:'Space Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase}
+.dot{color:var(--orange)}
+
+.pole-strip,.minipole{background:repeating-linear-gradient(-45deg,var(--cream) 0 14px,var(--green) 14px 28px,var(--cream) 28px 42px,var(--orange) 42px 56px);animation:polemove 1.7s linear infinite}
+@keyframes polemove{to{background-position:79.2px 0}}
+.pole-strip{height:22px;border-block:1px solid var(--linec)}
+.minipole{width:11px;height:27px;border-radius:99px;border:1px solid rgba(25,24,19,.3);animation-duration:1.1s}
+
+.btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:999px;
+  font-weight:600;font-size:.92rem;border:1px solid transparent;transition:.25s;white-space:nowrap}
+.btn-solid{background:var(--ink);color:var(--cream)}
+.btn-solid:hover{background:var(--orange);transform:translateY(-1px)}
+.btn-ghost{border-color:var(--ink);color:var(--ink);background:transparent}
+.btn-ghost:hover{background:var(--ink);color:var(--cream)}
+.side .btn-ghost{border-color:var(--linec);color:var(--cream)}
+.side .btn-ghost:hover{background:var(--orange);border-color:var(--orange)}
+.chip{font-family:'Space Mono',monospace;font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:8px 14px;border:1px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);transition:.22s}
+.chip:hover,.chip.act{background:var(--ink);color:var(--cream)}
+
+input,select,textarea{font-family:inherit;font-size:.92rem;color:var(--ink);background:#FFFEFA;
+  border:1px solid rgba(25,24,19,.3);border-radius:10px;padding:11px 13px;transition:.2s;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(228,87,46,.14)}
+textarea{resize:vertical;line-height:1.55}
+
+#toasts{position:fixed;left:22px;bottom:22px;z-index:950;display:flex;flex-direction:column;gap:10px;max-width:min(400px,calc(100vw - 44px))}
+.toast{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--cream);
+  padding:15px 18px;border-radius:13px;box-shadow:0 18px 40px rgba(25,24,19,.3);
+  font-size:.92rem;line-height:1.4;transform:translateY(16px);opacity:0;transition:.35s cubic-bezier(.2,.8,.3,1)}
+.toast.show{transform:none;opacity:1}
+.toast .lucide{color:var(--orange);width:19px;height:19px;margin-top:2px}
+
+/* ============ LOGIN ============ */
+.login-view{min-height:100svh;display:grid;place-items:center;padding:20px;
+  background:radial-gradient(900px 500px at 85% -10%,rgba(30,75,56,.14),transparent),var(--cream)}
+.login-card{width:min(860px,100%);display:grid;grid-template-columns:1fr 1.1fr;
+  border:1.5px solid var(--ink);border-radius:22px;overflow:hidden;background:var(--paper);
+  box-shadow:0 30px 70px rgba(25,24,19,.2)}
+.login-brand{background:var(--deep);color:var(--cream);padding:clamp(28px,4.5vw,52px);
+  display:flex;flex-direction:column;gap:14px}
+.login-brand h1{font-size:clamp(2.4rem,4.5vw,3.4rem)}
+.login-brand .mono-xs{color:rgba(244,238,225,.6)}
+.brand-desc{color:rgba(244,238,225,.78);font-size:.95rem;max-width:300px}
+.login-form-wrap{padding:clamp(28px,4.5vw,52px);display:flex;flex-direction:column;gap:14px}
+.lform{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field .mono-xs{color:var(--ink60)}
+.err{background:rgba(228,87,46,.1);border:1px solid rgba(228,87,46,.4);color:#A63A1B;
+  border-radius:10px;padding:10px 13px;font-size:.85rem}
+.linkbtn{background:none;border:none;font-size:.85rem;font-weight:600;color:var(--ink60);
+  text-align:left;padding:2px 0;border-bottom:2px solid var(--orange);align-self:flex-start}
+.linkbtn:hover{color:var(--ink)}
+.note{color:var(--ink45)}
+@media(max-width:760px){.login-card{grid-template-columns:1fr}}
+
+/* ============ APP SHELL ============ */
+.adm-shell{display:grid;grid-template-columns:250px 1fr;min-height:100svh}
+.side{background:var(--ink);color:var(--cream);position:sticky;top:0;height:100svh;
+  display:flex;flex-direction:column;padding:20px 14px;gap:6px}
+.sbrand{display:flex;align-items:center;gap:12px;padding:6px 10px 18px;border-bottom:1px solid var(--linec)}
+.sbrand strong{font-size:1.15rem;letter-spacing:.04em;display:block}
+.sbrand .mono-xs{color:rgba(244,238,225,.5);font-size:.56rem}
+.snav{display:flex;flex-direction:column;gap:5px;margin-top:16px;flex:1;overflow-y:auto}
+.snav button{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:12px;border:none;
+  background:none;color:rgba(244,238,225,.65);font-family:'Space Mono',monospace;font-size:.66rem;
+  letter-spacing:.14em;text-transform:uppercase;text-align:left;transition:.2s;width:100%}
+.snav button:hover{background:rgba(244,238,225,.08);color:var(--cream)}
+.snav button.act{background:var(--orange);color:var(--cream)}
+.snav .lucide{width:16px;height:16px}
+.cnt{margin-left:auto;background:var(--orange);color:var(--cream);border-radius:99px;padding:2px 9px;font-size:.62rem;letter-spacing:0}
+.cnt.zero{display:none}
+.side-foot{border-top:1px solid var(--linec);padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.suser{display:flex;align-items:center;gap:9px;font-size:.8rem;color:rgba(244,238,225,.8);word-break:break-all}
+.suser .lucide{width:15px;height:15px;color:var(--orange)}
+.adm-right{display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--paper);border-bottom:1px solid var(--line);padding:16px clamp(18px,3vw,32px);
+  display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:30}
+.tbmain{flex:1;min-width:0;overflow:hidden}
+.topbar .display{font-size:1.25rem}
+.topbar .mono-xs{color:var(--ink60);margin-top:3px}
+.topbtn{padding:10px 16px;font-size:.82rem}
+main#view{padding:clamp(18px,3vw,32px);flex:1}
+
+/* ============ BURGER MENU (RESPONSIVE — MULUS) ============ */
+.burger{display:none;width:42px;height:42px;flex:none;border-radius:12px;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);place-items:center;
+  transition:background .25s,color .25s,transform .32s cubic-bezier(.2,.8,.3,1)}
+.burger:hover{background:var(--ink);color:var(--cream)}
+.burger svg{width:20px;height:20px}
+.burger.x{transform:rotate(90deg)}
+.sideclose{display:none;margin-left:auto;width:38px;height:38px;border-radius:10px;border:1px solid var(--linec);
+  background:none;color:var(--cream);place-items:center;transition:.2s}
+.sideclose:hover{background:var(--orange)}
+.sideclose svg{width:17px;height:17px}
+.backdrop{position:fixed;inset:0;background:rgba(25,24,19,.5);z-index:80;opacity:0;pointer-events:none;transition:opacity .3s}
+.backdrop.show{opacity:1;pointer-events:auto}
+
+/* ============ PROFILE DROPDOWN ============ */
+.profile{position:relative;flex:none}
+.pbtn{display:flex;align-items:center;background:none;border:none;padding:3px;border-radius:99px}
+.avatar{width:42px;height:42px;border-radius:99px;background:var(--deep);color:var(--cream);
+  display:flex;align-items:center;justify-content:center;font-family:'Anton',sans-serif;letter-spacing:.06em;
+  font-size:.85rem;border:2px solid var(--orange);overflow:hidden;flex:none;transition:border-color .25s}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar.big{width:78px;height:78px;font-size:1.6rem}
+.pbtn:hover .avatar{border-color:var(--ink)}
+.pdd{position:absolute;right:0;top:calc(100% + 10px);width:252px;background:var(--paper);
+  border:1.5px solid var(--ink);border-radius:16px;box-shadow:0 24px 50px rgba(25,24,19,.28);z-index:70;overflow:hidden;
+  transform:translateY(-8px) scale(.97);opacity:0;pointer-events:none;
+  transition:transform .25s cubic-bezier(.2,.8,.3,1),opacity .22s;transform-origin:top right}
+.pdd.open{transform:none;opacity:1;pointer-events:auto}
+.pdd-head{padding:14px 16px;background:var(--deep);color:var(--cream);display:flex;gap:11px;align-items:center}
+.pdd-head .avatar{width:40px;height:40px;font-size:.8rem;border-color:rgba(228,87,46,.7)}
+.pdd-head>div{min-width:0}
+.pdd-head strong{display:block;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdd-head .mono-xs{color:rgba(244,238,225,.62);font-size:.55rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdd-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border:none;background:none;
+  font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink);text-align:left;transition:background .18s}
+.pdd-item:hover{background:var(--cream2)}
+.pdd-item svg{width:15px;height:15px;color:var(--orange);flex:none}
+.pdd-item.danger{color:#A63A1B}
+.pdd-item.danger svg{color:#A63A1B}
+.pdd-item.danger:hover{background:rgba(228,87,46,.12)}
+.pdd-sep{height:1px;background:var(--line)}
+
+/* ============ MODAL ============ */
+.mwrap{position:fixed;inset:0;z-index:920;display:grid;place-items:center;padding:18px;
+  background:rgba(25,24,19,.55);opacity:0;pointer-events:none;transition:opacity .28s}
+.mwrap.open{opacity:1;pointer-events:auto}
+.modal{width:min(560px,100%);max-height:min(88svh,780px);overflow-y:auto;background:var(--paper);
+  border:1.5px solid var(--ink);border-radius:20px;box-shadow:0 30px 70px rgba(25,24,19,.3);
+  transform:translateY(16px) scale(.98);transition:transform .3s cubic-bezier(.2,.8,.3,1)}
+.mwrap.open .modal{transform:none}
+.modal-head{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--paper);z-index:2}
+.modal-body{padding:22px;display:flex;flex-direction:column;gap:14px}
+.pf-top{display:flex;gap:16px;align-items:center}
+
+/* ============ PASSWORD EYE ============ */
+.passwrap{position:relative;display:block}
+.passwrap input{padding-right:48px}
+.passtoggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:36px;height:34px;border:none;
+  background:none;color:var(--ink60);border-radius:8px;display:grid;place-items:center;transition:.2s}
+.passtoggle:hover{color:var(--orange);background:var(--cream)}
+.passtoggle svg{width:16px;height:16px}
+
+/* ============ UPLOAD FOTO (CLOUDINARY) ============ */
+.upl{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:start;padding:15px;
+  border:1px solid var(--line);border-radius:14px;background:var(--cream);margin-bottom:12px}
+.upl-prev{width:150px;height:100px;border-radius:10px;border:1.5px dashed rgba(25,24,19,.35);
+  background:#FFFEFA;display:grid;place-items:center;color:var(--ink45);overflow:hidden}
+.upl-prev svg{width:26px;height:26px}
+.upl-prev.has{border-style:solid;border-color:var(--line)}
+.upl-prev img{width:100%;height:100%;object-fit:cover;display:block}
+.upl-main{display:flex;flex-direction:column;gap:8px;min-width:0}
+.upl-main strong{font-size:.98rem}
+.upl-bar{height:5px;border-radius:99px;background:var(--cream2);overflow:hidden;display:none}
+.upl-bar.on{display:block}
+.upl-bar i{display:block;height:100%;width:0;background:var(--orange);transition:width .2s}
+.upl-actions{display:flex;gap:8px;flex-wrap:wrap}
+.upl-actions .btn{padding:9px 14px;font-size:.8rem}
+.upl-meta{color:var(--ink45);font-size:.68rem;word-break:break-all;font-family:'Space Mono',monospace}
+
+/* ============ OVERVIEW ============ */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px}
+.tile .num{font-size:clamp(2rem,3.4vw,3rem);margin-top:8px}
+.tnote{color:var(--ink45);font-size:.82rem;margin-top:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:clamp(18px,2.5vw,26px)}
+.cardtitle{color:var(--ink60);margin-bottom:16px}
+.emptynote{color:var(--ink45);font-size:.9rem}
+.evlist{list-style:none;display:flex;flex-direction:column}
+.evlist li{display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid var(--line);font-size:.9rem}
+.evlist li:first-child{border-top:none}
+.ev-uid{color:var(--ink45)}
+.ev-route{font-weight:600}
+.ev-time{margin-left:auto;color:var(--ink45);white-space:nowrap}
+.ovlead{display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid var(--line);font-size:.92rem}
+.ovlead:first-child{border-top:none}
+.ovlead .mono-xs{margin-left:auto;color:var(--ink45);white-space:nowrap}
+
+/* ============ LIVE CHAT ============ */
+.chat-hint{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);
+  border-radius:12px;padding:11px 15px;color:var(--ink60);margin-bottom:14px;letter-spacing:.1em;font-size:.6rem}
+.chat-hint .lucide{width:15px;height:15px;color:var(--orange)}
+.adm{display:grid;grid-template-columns:minmax(280px,330px) 1fr;gap:16px;align-items:stretch}
+.adm-list{display:flex;flex-direction:column;border:1px solid var(--ink);border-radius:16px;overflow:hidden;
+  background:var(--paper);max-height:calc(100svh - 220px);overflow-y:auto}
+.adm-item{display:flex;gap:12px;align-items:center;padding:13px 15px;border:none;border-bottom:1px solid var(--line);
+  background:none;text-align:left;font-family:inherit;width:100%;transition:background .2s}
+.adm-item:last-child{border-bottom:none}
+.adm-item:hover{background:var(--cream2)}
+.adm-item.sel{background:var(--deep);color:var(--cream)}
+.adm-meta{flex:1;min-width:0}
+.adm-meta strong{font-family:'Space Mono',monospace;font-size:.64rem;letter-spacing:.12em;display:block}
+.prev{display:block;font-size:.85rem;color:var(--ink60);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.adm-item.sel .prev{color:rgba(244,238,225,.72)}
+.adm-item .side2{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.ub{background:var(--orange);color:var(--cream);font-family:'Space Mono',monospace;font-size:.6rem;border-radius:99px;padding:2px 8px}
+.tag{font-family:'Space Mono',monospace;font-size:.54rem;letter-spacing:.08em;color:var(--ink45);white-space:nowrap}
+.adm-item.sel .tag{color:rgba(244,238,225,.55)}
+.adm-main{border:1px solid var(--ink);border-radius:16px;background:var(--paper);display:flex;flex-direction:column;
+  height:calc(100svh - 220px);min-height:420px;overflow:hidden}
+.adm-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  color:var(--ink45);font-size:.9rem;text-align:center;padding:20px}
+.adm-empty .lucide{width:34px;height:34px}
+.adm-top{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);
+  background:var(--deep);color:var(--cream);flex:none}
+.adm-uid{flex:1;line-height:1.35;min-width:0}
+.adm-uid strong{font-family:'Anton',sans-serif;letter-spacing:.05em;font-size:.95rem}
+.adm-uid .mono-xs{color:rgba(244,238,225,.6);display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:.55rem}
+.on-dot{width:8px;height:8px;border-radius:99px;background:#5FC97C;display:inline-block;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.adm-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--cream)}
+.adm-form{display:flex;gap:9px;padding:12px 14px;border-top:1px solid var(--line);flex:none;background:var(--paper)}
+.adm-form input{flex:1;border-radius:99px;padding:11px 16px}
+.adm-form button{width:44px;height:44px;border-radius:99px;border:none;background:var(--ink);color:var(--cream);
+  display:grid;place-items:center;transition:.25s;flex:none}
+.adm-form button:hover{background:var(--orange)}
+.adm-form .lucide{width:17px;height:17px}
+.msg{max-width:80%;padding:10px 13px;font-size:.9rem;line-height:1.45;border-radius:13px}
+.msg.user{align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--cream2);border:1px dashed rgba(25,24,19,.28);border-bottom-left-radius:4px}
+.msg.admin{align-self:flex-end;background:var(--deep);color:var(--cream);border-bottom-right-radius:4px}
+.msg.user::before,.msg.bot::before,.msg.admin::before{display:block;font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.16em;margin-bottom:4px}
+.msg.user::before{content:'PENGUNJUNG';color:var(--ink45)}
+.msg.bot::before{content:'ARSIP BOT';color:var(--green)}
+.msg.admin::before{content:'LU — ADMIN';color:var(--orange)}
+
+/* ============ LEADS & KONTEN ============ */
+.lead-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.txt{max-width:280px;border-radius:999px;padding:10px 16px}
+.lead{border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:16px 18px;
+  display:flex;gap:14px;align-items:flex-start;margin-bottom:10px}
+.ltag{font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:.12em;padding:6px 10px;border-radius:99px;flex:none;margin-top:3px}
+.t-sdm{background:var(--green);color:var(--cream)}
+.t-fran{background:var(--orange);color:var(--cream)}
+.t-aca{background:var(--ink);color:var(--cream)}
+.t-lmr{background:var(--cream2);color:var(--ink);border:1px solid var(--line)}
+.lead-main{flex:1;min-width:0}
+.lead-main strong{font-size:1.05rem}
+.walink{display:inline-flex;align-items:center;gap:6px;margin-left:12px;font-size:.85rem;font-weight:600;
+  color:var(--green);border-bottom:2px solid var(--orange)}
+.walink:hover{color:var(--orange)}
+.walink .lucide{width:13px;height:13px}
+.kvs{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.kv{border:1px solid var(--line);border-radius:99px;padding:4px 11px;font-size:.76rem;color:var(--ink60);background:var(--cream)}
+.lead-side{display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex:none}
+.lead-side .mono-xs{color:var(--ink45);white-space:nowrap}
+.ibtn,.delbtn{width:36px;height:36px;border-radius:99px;border:1px solid var(--line);background:transparent;
+  color:var(--ink60);display:grid;place-items:center;transition:.2s}
+.ibtn:hover,.delbtn:hover{background:var(--ink);color:var(--cream)}
+.ibtn .lucide,.delbtn .lucide{width:15px;height:15px}
+
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.cf{display:flex;flex-direction:column;gap:6px}
+.cf .mono-xs{color:var(--ink60)}
+.cf.wide{grid-column:1/-1}
+.grouplbl{grid-column:1/-1;color:var(--orange);margin-top:6px}
+.crow{display:grid;grid-template-columns:130px 180px 160px 1fr auto auto;gap:10px;align-items:end;
+  padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--cream);margin-bottom:10px}
+.crow.simple{grid-template-columns:1fr 1fr 1fr auto}
+.crow.two{grid-template-columns:1fr auto}
+.chk{display:flex;flex-direction:row;align-items:center;gap:8px;padding-bottom:11px}
+.chk input{width:auto}
+.rowbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.arow{display:flex;gap:14px;align-items:center;padding:13px 2px;border-top:1px solid var(--line)}
+.arow:first-of-type{border-top:none}
+.art-cat{color:var(--orange);flex:none;width:70px}
+.art-main{flex:1;min-width:0}
+.art-main a{font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.art-main a:hover{color:var(--orange)}
+.art-main a .lucide{width:13px;height:13px;color:var(--orange)}
+.art-main .mono-xs{display:block;color:var(--ink45);margin-top:4px}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:1000px){.tiles{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+@media(max-width:860px){
+  .adm-shell{grid-template-columns:1fr}
+  .burger{display:grid}
+  .sideclose{display:grid}
+  .side{position:fixed;left:0;top:0;bottom:0;width:min(292px,86vw);height:100svh;z-index:90;
+    transform:translateX(-104%);transition:transform .38s cubic-bezier(.2,.8,.3,1);
+    box-shadow:24px 0 60px rgba(25,24,19,.35)}
+  .adm-shell.side-open .side{transform:translateX(0)}
+  .snav{flex-direction:column;flex-wrap:nowrap;overflow-y:auto;overflow-x:hidden}
+  .snav button{white-space:nowrap;width:100%}
+  .adm{grid-template-columns:1fr}
+  .adm-list{max-height:240px}
+  .adm-main{height:60vh;min-height:360px}
+  .topbar{gap:10px}
+  .topbtn span{display:none}
+  .topbtn{padding:10px 13px;margin-left:0}
+}
+@media(max-width:620px){
+  .crow{grid-template-columns:1fr 1fr}
+  .crow .cf.wide{grid-column:1/-1}
+  .lead{flex-wrap:wrap}
+  .tiles{grid-template-columns:1fr}
+  .upl{grid-template-columns:1fr}
+  .upl-prev{width:100%;height:150px}
+  #viewSub{display:none}
+  .topbar .display{font-size:1.05rem}
+}
+</style>
+</head>
+<body>
+<div class="noise" aria-hidden="true"></div>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginView" class="login-view">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="minipole" aria-hidden="true"></span>
+      <h1 class="display">BARBER<span class="dot">GO</span></h1>
+      <p class="mono-xs">CONTROL ROOM — INTERNAL ONLY</p>
+      <p class="brand-desc">Satu-satunya tempat ngatur isi situs: live chat, leads, artikel, batch, lowongan, jenjang komisi, testimoni, FAQ, foto, dan semua angka. Situs index.html 100% membaca dari sini.</p>
+      <div class="pole-strip" style="margin-top:auto"></div>
+    </div>
+    <div class="login-form-wrap">
+      <form id="loginForm" class="lform" autocomplete="on">
+        <p class="mono-xs" style="color:var(--ink60)">MASUK</p>
+        <label class="field"><span class="mono-xs">EMAIL</span>
+          <input id="loginEmail" type="email" required autocomplete="email" placeholder="admin@barbergo.id"></label>
+        <label class="field"><span class="mono-xs">PASSWORD</span>
+          <span class="passwrap">
+            <input id="loginPass" class="pw" type="password" required autocomplete="current-password" placeholder="••••••••">
+            <button type="button" class="passtoggle" data-eye="loginPass" aria-label="Lihat password"><i data-lucide="eye"></i></button>
+          </span></label>
+        <p class="err" id="authErr" style="display:none"></p>
+        <button class="btn btn-solid" type="submit"><i data-lucide="log-in"></i> Masuk Control Room</button>
+        <button type="button" class="linkbtn" id="forgot">Lupa password?</button>
+        <button type="button" class="linkbtn" id="toReg">Belum punya akun? Daftar</button>
+      </form>
+      <form id="regForm" class="lform" hidden>
+        <p class="mono-xs" style="color:var(--ink60)">DAFTAR AKUN BARU</p>
+        <label class="field"><span class="mono-xs">EMAIL</span>
+          <input id="regEmail" type="email" required placeholder="harus masuk daftar ADMIN_EMAILS"></label>
+        <label class="field"><span class="mono-xs">PASSWORD</span>
+          <span class="passwrap">
+            <input id="regPass" class="pw" type="password" required minlength="6">
+            <button type="button" class="passtoggle" data-eye="regPass" aria-label="Lihat password"><i data-lucide="eye"></i></button>
+          </span></label>
+        <label class="field"><span class="mono-xs">ULANGI PASSWORD</span>
+          <span class="passwrap">
+            <input id="regPass2" class="pw" type="password" required minlength="6">
+            <button type="button" class="passtoggle" data-eye="regPass2" aria-label="Lihat password"><i data-lucide="eye"></i></button>
+          </span></label>
+        <p class="err" id="authErr2" style="display:none"></p>
+        <button class="btn btn-solid" type="submit"><i data-lucide="user-plus"></i> Buat Akun</button>
+        <button type="button" class="linkbtn" id="toLogin">Udah punya akun? Masuk</button>
+      </form>
+      <p class="note mono-xs">DEFAULT: ADMIN@BARBERGO.ID — GANTI DI ADMIN_EMAILS &amp; RULES</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appView" hidden>
+  <div class="adm-shell">
+    <aside class="side">
+      <div class="sbrand">
+        <span class="minipole" aria-hidden="true"></span>
+        <div><strong class="display">BARBER<span class="dot">GO</span></strong><span class="mono-xs">Control Room</span></div>
+        <button class="sideclose" id="sideClose" aria-label="Tutup menu"><i data-lucide="x"></i></button>
+      </div>
+      <nav class="snav" aria-label="Navigasi admin">
+        <button data-view="overview" class="act"><i data-lucide="layout-dashboard"></i>Ringkasan</button>
+        <button data-view="chat"><i data-lucide="message-circle"></i>Live Chat<span class="cnt zero" id="navChatBadge">0</span></button>
+        <button data-view="leads"><i data-lucide="users"></i>Leads<span class="cnt zero" id="navLeadBadge">0</span></button>
+        <button data-view="content"><i data-lucide="newspaper"></i>Konten</button>
+      </nav>
+      <div class="side-foot">
+        <div class="suser"><i data-lucide="shield-check"></i><span id="who">—</span></div>
+        <button id="logoutBtn" class="btn btn-ghost"><i data-lucide="log-out"></i> Keluar</button>
+      </div>
+    </aside>
+    <div class="adm-right">
+      <header class="topbar">
+        <button class="burger" id="burger" aria-label="Menu navigasi" aria-expanded="false"><i data-lucide="menu"></i></button>
+        <div class="tbmain">
+          <strong class="display" id="viewTitle">RINGKASAN</strong>
+          <p class="mono-xs" id="viewSub">Denyut situs — realtime dari Firestore</p>
+        </div>
+        <a class="btn btn-ghost topbtn" href="index.html" target="_blank" rel="noopener"><i data-lucide="external-link"></i><span> Buka situs</span></a>
+        <div class="profile">
+          <button class="pbtn" id="pbtn" aria-haspopup="menu" aria-expanded="false" title="Profile admin">
+            <span class="avatar" id="avatar">…</span>
+          </button>
+          <div class="pdd" id="pdd" role="menu">
+            <div class="pdd-head">
+              <span class="avatar" id="pddAvatar">…</span>
+              <div>
+                <strong id="pddName">Admin BarberGo</strong>
+                <span class="mono-xs" id="pddEmail">—</span>
+              </div>
+            </div>
+            <button class="pdd-item" data-p="view" type="button"><i data-lucide="user"></i>Lihat Profile</button>
+            <button class="pdd-item" data-p="edit" type="button"><i data-lucide="pencil"></i>Edit Profile</button>
+            <button class="pdd-item" data-p="pass" type="button"><span id="passIcon"><i data-lucide="eye"></i></span><span id="passLabel">Lihat Password</span></button>
+            <button class="pdd-item" data-p="back" type="button"><i data-lucide="arrow-left"></i>Back History</button>
+            <div class="pdd-sep"></div>
+            <button class="pdd-item danger" data-p="logout" type="button"><i data-lucide="log-out"></i>Logout</button>
+          </div>
+        </div>
+      </header>
+      <main id="view"></main>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop" aria-hidden="true"></div>
+
+<!-- MODAL: LIHAT PROFILE -->
+<div class="mwrap" id="mProfile" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="minipole" aria-hidden="true"></span>
+      <strong class="display" style="font-size:1.05rem">PROFILE ADMIN</strong>
+      <button class="ibtn" data-mclose style="margin-left:auto" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" id="mProfileBody"></div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT PROFILE -->
+<div class="mwrap" id="mEdit" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="minipole" aria-hidden="true"></span>
+      <strong class="display" style="font-size:1.05rem">EDIT PROFILE</strong>
+      <button class="ibtn" data-mclose style="margin-left:auto" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="pf-top">
+        <span class="avatar big" id="editAvatar">…</span>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+          <span class="mono-xs" style="color:var(--ink60)">FOTO PROFILE — UPLOAD KE CLOUDINARY</span>
+          <div class="upl-actions">
+            <button class="btn btn-ghost" id="pickAvatar" type="button"><i data-lucide="image-plus"></i> Pilih foto</button>
+            <button class="btn btn-ghost" id="delAvatar" type="button" hidden><i data-lucide="trash-2"></i> Hapus foto</button>
+          </div>
+          <input type="file" id="avatarFile" accept="image/*" hidden>
+        </div>
+      </div>
+      <label class="cf"><span class="mono-xs">NAMA TAMPILAN</span><input id="editName" placeholder="Nama admin"></label>
+      <label class="cf"><span class="mono-xs">EMAIL LOGIN</span><input id="editEmail" type="email"></label>
+      <label class="cf"><span class="mono-xs">PASSWORD BARU — KOSONGKAN JIKA TIDAK DIGANTI</span>
+        <span class="passwrap">
+          <input id="editPass" class="pw" type="password" autocomplete="new-password" placeholder="min. 6 karakter">
+          <button type="button" class="passtoggle" data-eye="editPass" aria-label="Lihat password"><i data-lucide="eye"></i></button>
+        </span></label>
+      <p class="err" id="editErr" style="display:none"></p>
+      <button class="btn btn-solid" id="saveProfile" type="button"><i data-lucide="save"></i> Simpan Perubahan</button>
+      <p class="note mono-xs">GANTI EMAIL/PASSWORD BUTUH LOGIN SEGAR. KALAU ERROR "REQUIRES-RECENT-LOGIN": LOGOUT, MASUK LAGI, BARU EDIT.</p>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script type="module">
+/* ================================================================
+   BARBERGO ADMIN — Control Room (FULL)
+   chat · leads · KPI · batch · lowongan · jenjang · testimoni ·
+   FAQ · artikel · chat config · FOTO (Cloudinary) · profile admin
+   ================================================================ */
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
+        onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail,
+        updateProfile, updateEmail, updatePassword}
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {initializeFirestore, persistentLocalCache, collection, doc, addDoc, setDoc, getDoc,
+        getDocs, deleteDoc, query, orderBy, limit, serverTimestamp, increment, onSnapshot,
+        getCountFromServer}
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCgCQBFaXtPjpBRzxP1lddrudOdt9SHLU8",
+  authDomain: "hometown-bf1b0.firebaseapp.com",
+  projectId: "hometown-bf1b0",
+  storageBucket: "hometown-bf1b0.firebasestorage.app",
+  messagingSenderId: "563519592917",
+  appId: "1:563519592917:web:bfad836a195fe05eef855c",
+  measurementId: "G-WEP7DSSQ84"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = initializeFirestore(fbApp, {localCache: persistentLocalCache()});
+
+/* ↓↓ GANTI SESUAI KEBUTUHAN — harus SAMA dengan daftar email di rules ↓↓ */
+const ADMIN_EMAILS = ['admin@barbergo.id','owner@barbergo.id'];
+
+/* ---------------- CLOUDINARY ---------------- */
+const CLOUD_NAME  = 'o9nnrrra';
+const CLOUD_PRESET= 'Barbergo';
+
+/* ---------------- HELPERS ---------------- */
+const $  = (s,c=document)=>c.querySelector(s);
+const $$ = (s,c=document)=>[...c.querySelectorAll(s)];
+const esc = s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function icons(){ lucide.createIcons() }
+function toast(msg){
+  const c=$('#toasts'), el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML='<i data-lucide="check"></i><span>'+msg+'</span>';
+  c.appendChild(el); icons();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),400)},4600);
+}
+function toMs(t){ if(!t)return 0; if(typeof t==='number')return t; try{return t.toMillis()}catch(e){return 0} }
+function timeAgo(t){
+  const ms=toMs(t); if(!ms)return '—';
+  const s=(Date.now()-ms)/1000;
+  if(s<60)return 'baru saja';
+  if(s<3600)return Math.floor(s/60)+' mnt lalu';
+  if(s<86400)return Math.floor(s/3600)+' jam lalu';
+  return Math.floor(s/86400)+' hr lalu';
+}
+function badge(id,n){
+  const el=$('#'+id); if(!el)return;
+  el.textContent=n; el.classList.toggle('zero',!n);
+  if(id==='navChatBadge') document.title = n ? `(${n}) BarberGo Admin` : 'BarberGo Admin — Control Room';
+}
+function isAdminEmail(e){ return ADMIN_EMAILS.includes((e||'').toLowerCase()) }
+
+/* ================================================================
+   CLOUDINARY — UPLOAD DENGAN PROGRESS BAR
+   ================================================================ */
+function uploadCloudinary(file,slot){
+  return new Promise((resolve,reject)=>{
+    const bar=slot?$('#bar_'+slot):null;
+    const fill=bar?bar.firstElementChild:null;
+    if(bar)bar.classList.add('on');
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST',`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+    xhr.upload.onprogress=e=>{ if(fill&&e.lengthComputable) fill.style.width=Math.round(e.loaded/e.total*100)+'%' };
+    xhr.onload=()=>{
+      if(bar){fill.style.width='100%';setTimeout(()=>{bar.classList.remove('on');fill.style.width='0'},700)}
+      if(xhr.status>=200&&xhr.status<300){
+        try{ resolve(JSON.parse(xhr.responseText).secure_url) }
+        catch(err){ reject(new Error('Respon Cloudinary rusak.')) }
+      }else{
+        let msg='Upload gagal ('+xhr.status+').';
+        try{ const j=JSON.parse(xhr.responseText); if(j.error&&j.error.message)msg=j.error.message }catch(err){}
+        reject(new Error(msg));
+      }
+    };
+    xhr.onerror=()=>reject(new Error('Koneksi ke Cloudinary gagal — cek internet.'));
+    const fd=new FormData();
+    fd.append('file',file);
+    fd.append('upload_preset',CLOUD_PRESET);
+    xhr.send(fd);
+  });
+}
+
+/* ================================================================
+   PROFILE ADMIN — AVATAR, MODAL, DROPDOWN
+   ================================================================ */
+let passVisible=false;
+function initialsOf(u){
+  const n=((u&&u.displayName)||(((u&&u.email)||'?').split('@')[0])||'?').trim();
+  const p=n.split(/\s+/);
+  return (p.length>1?(p[0][0]+p[1][0]):n.slice(0,2)).toUpperCase();
+}
+function paintAvatar(){
+  if(!ME)return;
+  const html=ME.photoURL?`<img src="${esc(ME.photoURL)}" alt="foto admin">`:initialsOf(ME);
+  ['#avatar','#pddAvatar','#editAvatar'].forEach(s=>{const el=$(s);if(el)el.innerHTML=html});
+  $('#pddName').textContent=ME.displayName||'Admin BarberGo';
+  $('#pddEmail').textContent=ME.email||'—';
+  const d=$('#delAvatar'); if(d)d.hidden=!ME.photoURL;
+}
+function openModal(id){$('#'+id).classList.add('open')}
+function closeModal(id){$('#'+id).classList.remove('open')}
+function closeAllModals(){$$('.mwrap').forEach(m=>m.classList.remove('open'))}
+
+function openViewProfile(){
+  const m=ME.metadata||{};
+  $('#mProfileBody').innerHTML=`
+    <div class="pf-top">
+      <span class="avatar big">${ME.photoURL?`<img src="${esc(ME.photoURL)}" alt="">`:initialsOf(ME)}</span>
+      <div style="min-width:0">
+        <strong style="font-size:1.25rem;display:block">${esc(ME.displayName||'Admin BarberGo')}</strong>
+        <p class="mono-xs" style="color:var(--ink60);margin-top:5px">${esc(ME.email||'—')}</p>
+      </div>
+    </div>
+    <div class="kvs">
+      <span class="kv">${ME.emailVerified?'Email terverifikasi':'Email belum verifikasi'}</span>
+      <span class="kv">UID: ${esc(ME.uid.slice(0,12))}…</span>
+      <span class="kv">Dibuat: ${esc(m.creationTime||'—')}</span>
+      <span class="kv">Login: ${esc(m.lastSignInTime||'—')}</span>
+    </div>
+    <div class="upl-actions">
+      <button class="btn btn-ghost" id="pfEdit" type="button"><i data-lucide="pencil"></i> Edit Profile</button>
+      <button class="btn btn-solid" id="pfVerify" type="button" ${ME.emailVerified?'hidden':''}><i data-lucide="mail"></i> Kirim verifikasi</button>
+    </div>`;
+  openModal('mProfile'); icons();
+  $('#pfEdit').addEventListener('click',()=>{closeModal('mProfile');openEditProfile()});
+  const v=$('#pfVerify');
+  if(v)v.addEventListener('click',async()=>{
+    try{await sendEmailVerification(ME);toast('Email verifikasi dikirim ke '+ME.email+'.')}
+    catch(e){toast(authMsg(e))}
+  });
+}
+function openEditProfile(){
+  if(!ME)return;
+  $('#editName').value=ME.displayName||'';
+  $('#editEmail').value=ME.email||'';
+  $('#editPass').value='';
+  $('#editErr').style.display='none';
+  paintAvatar(); openModal('mEdit');
+}
+
+/* ---------------- STATE ---------------- */
+const VIEW_META={
+  overview:['RINGKASAN','Denyut situs — realtime dari Firestore'],
+  chat:['LIVE CHAT','Balas pengunjung index.html langsung — tanpa bot'],
+  leads:['LEADS','Semua form masuk — realtime'],
+  content:['KONTEN','Semua isi situs: KPI, foto, batch, lowongan, jenjang, testimoni, FAQ, artikel, chat']
+};
+const LEAD_META={
+  leads_sdm:{tag:'SDM',cls:'t-sdm'},
+  leads_franchise:{tag:'FRANCHISE',cls:'t-fran'},
+  leads_academy:{tag:'ACADEMY',cls:'t-aca'},
+  applications:{tag:'LAMARAN',cls:'t-lmr'}
+};
+const SKIP_KEYS=['id','_coll','_ex','uid','source','createdAt','createdAtLocal','nama','wa'];
+const KPI_GROUPS=[
+  ['JARINGAN & EKOSISTEM',[['cities','Kota jaringan'],['partners','Mitra & outlet aktif'],['kapster','Kapster tersertifikasi'],['alumni','Alumni academy']]],
+  ['FRANCHISE',[['invest','Investasi awal (Rp juta)'],['royalti','Royalti (%)'],['bep','Target balik modal (bulan)']]],
+  ['ACADEMY',[['minggu','Durasi program (minggu)'],['praktik','Porsi praktik (%)'],['rasio','Murid per mentor']]],
+  ['LAYANAN SDM',[['garansi','Garansi penggantian (hari)'],['penempatan','Rata-rata penempatan (hari)'],['repeat','Klien perpanjang (%)']]]
+];
+const CTABS=[
+  ['kpi','Angka KPI'],['media','Foto Situs'],['batches','Batch Academy'],['jobs','Lowongan'],
+  ['tiers','Jenjang Komisi'],['testi','Testimoni'],['faqs','FAQ Franchise'],
+  ['articles','Artikel GoNews'],['chat','Chat Config']
+];
+const MEDIA_SLOTS=[
+  ['beranda','Beranda','Foto hero utama halaman depan'],
+  ['franchise','Franchise','Foto section franchise'],
+  ['academy','Academy','Foto section academy'],
+  ['sdm','SDM','Foto section layanan SDM / kapster'],
+  ['loker','Loker','Foto section lowongan karier']
+];
+const bodyToText=b=>(b||[]).map(x=>x.h?('## '+x.h):(x.p||'')).join('\n\n');
+const textToBody=t=>t.split(/\n\s*\n/).map(s=>s.replace(/\s*\n\s*/g,' ').trim()).filter(Boolean)
+  .map(s=>s.startsWith('## ')?{h:s.slice(3).trim()}:{p:s});
+
+let ME=null, activeView='overview', admSel=null;
+let chatThreads=[], leadsAll=[];
+let leadFilter='all', leadQ='';
+let ctab='kpi', workB=[], workJ=[], workT=[], workS=[], workF=[], workA=[], editingArt=null;
+const unsub={chats:null,events:null,traffic:null,thread:null};
+let LEADS_UNSUB=[];
+
+/* ================================================================
+   AUTH
+   ================================================================ */
+const loginView=$('#loginView'), appView=$('#appView');
+function setAuthErr(m){
+  [$('#authErr'),$('#authErr2')].forEach(el=>{el.textContent=m||'';el.style.display=m?'block':'none'});
+}
+function authMsg(e){
+  const m={
+    'auth/invalid-credential':'Email atau password salah.',
+    'auth/wrong-password':'Password salah.',
+    'auth/user-not-found':'Akun dengan email itu belum ada.',
+    'auth/email-already-in-use':'Email udah kepakai — coba masuk, bukan daftar.',
+    'auth/weak-password':'Password minimal 6 karakter.',
+    'auth/invalid-email':'Format email nggak valid.',
+    'auth/too-many-requests':'Kebanyakan percobaan — tunggu sebentar.',
+    'auth/network-request-failed':'Koneksi bermasalah — cek internet lu.'
+  };
+  return m[e.code]||('Gagal: '+(e.code||e.message));
+}
+onAuthStateChanged(auth,user=>{
+  if(user && isAdminEmail(user.email)){
+    ME=user;
+    $('#who').textContent=user.email;
+    paintAvatar();
+    loginView.hidden=true; appView.hidden=false;
+    startGlobal(); showView('overview');
+  }else if(user){
+    setAuthErr('Email '+user.email+' belum terdaftar sebagai admin. Tambahkan email ini ke ADMIN_EMAILS di admin.html dan di rules Firestore, lalu login ulang.');
+    signOut(auth);
+  }else{
+    ME=null; teardown();
+    appView.hidden=true; loginView.hidden=false;
+    $('#loginForm').hidden=false; $('#regForm').hidden=true;
+  }
+});
+ $('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault(); setAuthErr('');
+  try{
+    await signInWithEmailAndPassword(auth,$('#loginEmail').value.trim().toLowerCase(),$('#loginPass').value);
+  }catch(err){ setAuthErr(authMsg(err)) }
+});
+ $('#regForm').addEventListener('submit',async e=>{
+  e.preventDefault(); setAuthErr('');
+  const email=$('#regEmail').value.trim().toLowerCase();
+  const p1=$('#regPass').value, p2=$('#regPass2').value;
+  if(p1!==p2){setAuthErr('Konfirmasi password nggak sama.');return}
+  if(p1.length<6){setAuthErr('Password minimal 6 karakter.');return}
+  if(!isAdminEmail(email)){setAuthErr('Email ini belum masuk daftar ADMIN_EMAILS — tambahkan dulu (di admin.html + rules) biar datanya bisa diakses.');return}
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,email,p1);
+    sendEmailVerification(cred.user).catch(()=>{});
+    toast('Akun dibuat! Cek email buat verifikasi (disarankan).');
+  }catch(err){ setAuthErr(authMsg(err)) }
+});
+ $('#forgot').addEventListener('click',async()=>{
+  const email=$('#loginEmail').value.trim();
+  if(!email){setAuthErr('Isi email lu dulu di kolom login, baru klik "lupa password".');return}
+  try{ await sendPasswordResetEmail(auth,email); setAuthErr(''); toast('Link reset password dikirim ke '+email+'.') }
+  catch(err){ setAuthErr(authMsg(err)) }
+});
+ $('#toReg').addEventListener('click',()=>{$('#loginForm').hidden=true;$('#regForm').hidden=false;setAuthErr('')});
+ $('#toLogin').addEventListener('click',()=>{$('#regForm').hidden=true;$('#loginForm').hidden=false;setAuthErr('')});
+ $('#logoutBtn').addEventListener('click',()=>signOut(auth));
+
+/* ================================================================
+   LISTENER GLOBAL
+   ================================================================ */
+function startGlobal(){
+  if(unsub.chats)return;
+  unsub.chats=onSnapshot(query(collection(db,'chats'),orderBy('updatedAtLocal','desc'),limit(60)),snap=>{
+    chatThreads=snap.docs.map(d=>({id:d.id,...d.data()}));
+    badge('navChatBadge',chatThreads.reduce((s,c)=>s+(c.unreadAdmin||0),0));
+    if(activeView==='chat')renderThreadList();
+    if(activeView==='overview')renderOvRecent();
+    const m=chatThreads.find(c=>c.id===admSel), u=$('#admUnread');
+    if(u&&m)u.textContent=(m.unreadVisitor||0)>0?('pengunjung belum baca '+m.unreadVisitor+' pesan'):'pengunjung sudah baca semua';
+  },err=>console.warn('chats:',err.message));
+
+  Object.keys(LEAD_META).forEach(coll=>{
+    const un=onSnapshot(collection(db,coll),snap=>{
+      const arr=snap.docs.map(d=>({id:d.id,_coll:coll,...d.data()}));
+      leadsAll=leadsAll.filter(l=>l._coll!==coll).concat(arr);
+      leadsAll.sort((a,b)=>toMs(b.createdAt)-toMs(a.createdAt));
+      badge('navLeadBadge',leadsAll.length);
+      if(activeView==='leads')renderLeads();
+      if(activeView==='overview')renderOvRecent();
+    },err=>console.warn(coll,err.message));
+    LEADS_UNSUB.push(un);
+  });
+}
+function teardown(){
+  Object.values(unsub).forEach(u=>u&&u()); Object.keys(unsub).forEach(k=>unsub[k]=null);
+  LEADS_UNSUB.forEach(u=>u&&u()); LEADS_UNSUB=[];
+  chatThreads=[]; leadsAll=[]; admSel=null;
+  workB=[]; workJ=[]; workT=[]; workS=[]; workF=[]; workA=[]; editingArt=null;
+  leadFilter='all'; leadQ='';
+  badge('navChatBadge',0); badge('navLeadBadge',0);
+  $('#view').innerHTML='';
+}
+
+/* ================================================================
+   NAVIGASI + DRAWER RESPONSIVE
+   ================================================================ */
+ $$('.snav button').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
+function showView(v){
+  closeSide();
+  activeView=v;
+  if(unsub.events){unsub.events();unsub.events=null}
+  if(unsub.traffic){unsub.traffic();unsub.traffic=null}
+  if(unsub.thread){unsub.thread();unsub.thread=null}
+  $$('.snav button').forEach(b=>b.classList.toggle('act',b.dataset.view===v));
+  $('#viewTitle').textContent=VIEW_META[v][0];
+  $('#viewSub').textContent=VIEW_META[v][1];
+  const el=$('#view');
+  if(v==='overview')el.innerHTML=vOverview();
+  else if(v==='chat')el.innerHTML=vChat();
+  else if(v==='leads')el.innerHTML=vLeads();
+  else el.innerHTML=vContent();
+  icons();
+  if(v==='overview')startOverview();
+  else if(v==='chat')renderThreadList();
+  else if(v==='leads')renderLeads();
+  else renderCtab();
+}
+const shellEl=$('.adm-shell'), burgerEl=$('#burger'), backdropEl=$('#backdrop');
+function closeSide(){
+  shellEl.classList.remove('side-open');
+  burgerEl.classList.remove('x');
+  burgerEl.setAttribute('aria-expanded','false');
+  backdropEl.classList.remove('show');
+}
+burgerEl.addEventListener('click',()=>{
+  const open=shellEl.classList.toggle('side-open');
+  burgerEl.classList.toggle('x',open);
+  burgerEl.setAttribute('aria-expanded',open);
+  backdropEl.classList.toggle('show',open);
+});
+backdropEl.addEventListener('click',closeSide);
+ $('#sideClose').addEventListener('click',closeSide);
+
+/* ================================================================
+   VIEW: RINGKASAN
+   ================================================================ */
+function vOverview(){
+  return `
+  <div class="tiles">
+    ${[
+      ['ovViews','TOTAL PAGE VIEWS','Dihitung tiap pindah halaman di index.html'],
+      ['ovVisitors','PENGUNJUNG ANONIM','Sesi unik auth anonim'],
+      ['ovChats','PERCAKAPAN CHAT','Thread per pengunjung'],
+      ['ovLeads','LEADS MASUK','Semua form gabungan (4 koleksi)']
+    ].map(t=>`<div class="tile"><p class="mono-xs" style="color:var(--ink60)">${t[1]}</p><div class="num display" id="${t[0]}">—</div><p class="tnote">${t[2]}</p></div>`).join('')}
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><p class="mono-xs cardtitle">PAGEVIEW TERBARU — REALTIME</p><ul class="evlist" id="ovEvents"><li>Memuat…</li></ul></div>
+    <div class="card"><p class="mono-xs cardtitle">LEADS TERBARU</p><div id="ovRecent">Memuat…</div></div>
+  </div>`;
+}
+async function startOverview(){
+  unsub.traffic=onSnapshot(doc(db,'stats','traffic'),d=>{
+    const el=$('#ovViews');
+    if(el)el.textContent=(((d.exists()&&d.data().views)||0)).toLocaleString('id-ID');
+  },err=>console.warn(err));
+  const cnt=async c=>{try{const r=await getCountFromServer(collection(db,c));return r.data().count}catch(e){return 0}};
+  const [vis,chs,a,b,c,d]=await Promise.all([
+    cnt('visitors'),cnt('chats'),
+    cnt('leads_sdm'),cnt('leads_franchise'),cnt('leads_academy'),cnt('applications')
+  ]);
+  const setv=(id,v)=>{const el=$('#'+id);if(el)el.textContent=(v||0).toLocaleString('id-ID')};
+  setv('ovVisitors',vis); setv('ovChats',chs); setv('ovLeads',a+b+c+d);
+  renderOvRecent();
+  unsub.events=onSnapshot(query(collection(db,'analytics_events'),orderBy('ts','desc'),limit(10)),snap=>{
+    const el=$('#ovEvents'); if(!el)return;
+    el.innerHTML=snap.docs.map(dd=>{
+      const x=dd.data();
+      return `<li><span class="mono-xs ev-uid">${esc((x.uid||'—').slice(0,6).toUpperCase())}</span><strong class="ev-route">${esc(x.route||'#/')}</strong><span class="mono-xs ev-time">${timeAgo(x.ts)}</span></li>`;
+    }).join('')||'<li>Belum ada aktivitas — buka index.html dulu.</li>';
+  },()=>{const el=$('#ovEvents');if(el)el.innerHTML='<li>Gagal membaca events (cek rules).</li>'});
+}
+function renderOvRecent(){
+  const el=$('#ovRecent'); if(!el)return;
+  const top=leadsAll.slice(0,5);
+  if(!top.length){el.innerHTML='<p class="emptynote">Belum ada leads — form di index.html yang bakal ngisi ini.</p>';return}
+  el.innerHTML=top.map(l=>`
+    <div class="ovlead">
+      <span class="ltag ${LEAD_META[l._coll].cls}">${LEAD_META[l._coll].tag}</span>
+      <strong>${esc(l.nama||'—')}</strong>
+      <span class="mono-xs">${timeAgo(l.createdAt)}</span>
+    </div>`).join('');
+}
+
+/* ================================================================
+   VIEW: LIVE CHAT
+   ================================================================ */
+function vChat(){
+  return `
+  <div class="chat-hint mono-xs"><i data-lucide="info"></i>Nggak ada bot — semua balasan 100% dari lu. Pesan langsung tampil di layar pengunjung tanpa refresh. Tes: buka index.html di tab lain (incognito biar sesi auth nggak ketimpa).</div>
+  <div class="adm">
+    <aside class="adm-list" id="admList"></aside>
+    <div class="adm-main" id="admMain">
+      <div class="adm-empty"><i data-lucide="inbox"></i><p>Pilih percakapan di kiri<br>untuk mulai membalas.</p></div>
+    </div>
+  </div>`;
+}
+function renderThreadList(){
+  const el=$('#admList'); if(!el)return;
+  if(!chatThreads.length){
+    el.innerHTML='<p class="emptynote" style="padding:18px">Belum ada percakapan. Pengunjung yang kirim pesan lewat chat di index.html bakal muncul di sini secara realtime.</p>';return;
+  }
+  el.innerHTML=chatThreads.map(c=>`
+    <button class="adm-item ${admSel===c.id?'sel':''}" data-uid="${c.id}">
+      <span class="adm-meta">
+        <strong>${c.id.slice(0,10).toUpperCase()}…</strong>
+        <span class="prev">${esc(c.lastMsg||'')}</span>
+      </span>
+      <span class="side2">
+        ${(c.unreadAdmin||0)>0?`<span class="ub">${c.unreadAdmin}</span>`:''}
+        <span class="tag">${timeAgo(c.updatedAtLocal)}</span>
+      </span>
+    </button>`).join('');
+}
+function openThread(uid){
+  admSel=uid;
+  const meta=chatThreads.find(c=>c.id===uid);
+  $('#admMain').innerHTML=`
+    <div class="adm-top">
+      <span class="minipole" aria-hidden="true"></span>
+      <div class="adm-uid">
+        <strong>${uid.slice(0,10).toUpperCase()}…</strong>
+        <span class="mono-xs"><span class="on-dot"></span>Live — sinkron realtime · <span id="admUnread">${(meta&&(meta.unreadVisitor||0))>0?'pengunjung belum baca '+meta.unreadVisitor+' pesan':'pengunjung sudah baca semua'}</span></span>
+      </div>
+    </div>
+    <div class="adm-body" id="admBody"></div>
+    <form class="adm-form" id="admForm">
+      <input id="admInput" type="text" placeholder="Balas sebagai ADMIN — langsung sampai ke pengunjung…" autocomplete="off" maxlength="500">
+      <button type="submit" aria-label="Kirim"><i data-lucide="send"></i></button>
+    </form>`;
+  icons(); renderThreadList();
+  $('#admForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const inp=$('#admInput'), v=inp.value.trim();
+    if(!v||!admSel)return;
+    inp.value=''; adminReply(admSel,v);
+  });
+  if(unsub.thread)unsub.thread();
+  unsub.thread=onSnapshot(query(collection(db,'chats',uid,'messages'),orderBy('tsLocal')),snap=>{
+    const body=$('#admBody'); if(!body)return;
+    body.innerHTML='';
+    const arr=snap.docs.map(dd=>dd.data());
+    if(!arr.length)body.innerHTML='<p class="emptynote" style="margin:auto">Belum ada pesan di thread ini.</p>';
+    arr.forEach(m=>{
+      const el2=document.createElement('div');
+      el2.className='msg '+(m.role||'bot');
+      el2.textContent=m.text;
+      if(m.tsLocal)el2.title=new Date(m.tsLocal).toLocaleString('id-ID');
+      body.appendChild(el2);
+    });
+    body.scrollTop=body.scrollHeight;
+    markAdmRead(uid);
+  },err=>{toast('Gagal membuka thread — cek rules.');console.warn(err)});
+  setTimeout(()=>{const i=$('#admInput');if(i)i.focus()},100);
+}
+async function adminReply(uid,text){
+  try{
+    await addDoc(collection(db,'chats',uid,'messages'),{role:'admin',text,ts:serverTimestamp(),tsLocal:Date.now()});
+    await setDoc(doc(db,'chats',uid),{
+      lastMsg:text.slice(0,140), lastRole:'admin',
+      updatedAt:serverTimestamp(), updatedAtLocal:Date.now(),
+      unreadVisitor:increment(1), unreadAdmin:0
+    },{merge:true});
+  }catch(e){ toast('Gagal kirim balasan — cek rules / koneksi.') }
+}
+async function markAdmRead(uid){
+  const m=chatThreads.find(c=>c.id===uid);
+  if(!m||!(m.unreadAdmin>0))return;
+  try{ await setDoc(doc(db,'chats',uid),{unreadAdmin:0},{merge:true}) }catch(e){}
+}
+
+/* ================================================================
+   VIEW: LEADS
+   ================================================================ */
+function vLeads(){
+  return `
+  <div class="lead-tools">
+    <button class="chip act" data-lead-filter="all">Semua</button>
+    ${Object.entries(LEAD_META).map(([k,v])=>`<button class="chip" data-lead-filter="${k}">${v.tag}</button>`).join('')}
+    <input id="leadSearch" class="txt" type="text" placeholder="Cari nama / WA / kota…" value="${esc(leadQ)}">
+    <span class="mono-xs" style="margin-left:auto;color:var(--ink45)" id="leadCount"></span>
+    <button class="btn btn-ghost" id="leadCsv"><i data-lucide="download"></i> CSV</button>
+  </div>
+  <div id="leadList"></div>`;
+}
+function filteredLeads(){
+  return leadsAll
+    .filter(l=>leadFilter==='all'||l._coll===leadFilter)
+    .filter(l=>!leadQ||((l.nama||'')+' '+(l.wa||'')+' '+(l.kota||'')+' '+(l.domisili||'')+' '+(l.barbershop||'')).toLowerCase().includes(leadQ));
+}
+function renderLeads(){
+  const el=$('#leadList'); if(!el)return;
+  const rows=filteredLeads();
+  const cnt=$('#leadCount'); if(cnt)cnt.textContent=rows.length+' DATA';
+  if(!rows.length){
+    el.innerHTML='<div class="card"><p class="emptynote">Belum ada lead untuk filter ini. Form di index.html menulis langsung ke Firestore — begitu ada yang submit, muncul di sini tanpa refresh.</p></div>';return;
+  }
+  el.innerHTML=rows.map(l=>{
+    const det=Object.entries(l)
+      .filter(([k])=>!SKIP_KEYS.includes(k))
+      .filter(([,v])=>v!=null&&v!=='')
+      .map(([k,v])=>`<span class="kv">${esc(k)}: ${esc(v)}</span>`).join('');
+    return `
+    <div class="lead">
+      <span class="ltag ${LEAD_META[l._coll].cls}">${LEAD_META[l._coll].tag}</span>
+      <div class="lead-main">
+        <strong>${esc(l.nama||'—')}</strong>
+        ${l.wa?`<a class="walink" href="${waLink(l.wa)}" target="_blank" rel="noopener"><i data-lucide="phone"></i>${esc(l.wa)}</a>`:''}
+        <div class="kvs">${det}</div>
+      </div>
+      <div class="lead-side">
+        <span class="mono-xs">${timeAgo(l.createdAt)}</span>
+        <button class="delbtn" data-del="${l._coll}" data-del-id="${l.id}" title="Hapus lead"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+  icons();
+}
+function waLink(wa){
+  let n=String(wa).replace(/\D/g,'');
+  if(n.startsWith('0'))n='62'+n.slice(1);
+  else if(n.startsWith('8'))n='62'+n;
+  return 'https://wa.me/'+n;
+}
+function exportCsv(){
+  const rows=filteredLeads();
+  if(!rows.length){toast('Nggak ada data buat diekspor.');return}
+  const esc2=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const lines=[['waktu','tipe','nama','wa','detail'].join(',')];
+  rows.forEach(l=>{
+    const det=Object.entries(l)
+      .filter(([k])=>!SKIP_KEYS.includes(k))
+      .map(([k,v])=>k+': '+v).join(' | ');
+    const t=l.createdAt&&l.createdAt.toDate?l.createdAt.toDate().toISOString():'';
+    lines.push([t,LEAD_META[l._coll].tag,l.nama||'',l.wa||'',det].map(esc2).join(','));
+  });
+  const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='barbergo-leads-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('CSV diekspor — '+rows.length+' baris.');
+}
+
+/* ================================================================
+   VIEW: KONTEN
+   ================================================================ */
+function vContent(){
+  return `
+  <div class="lead-tools">
+    ${CTABS.map(([k,t])=>`<button class="chip ${ctab===k?'act':''}" data-ctab="${k}">${t}</button>`).join('')}
+  </div>
+  <div id="cwrap"></div>`;
+}
+async function loadColl(name){
+  try{
+    const snap=await getDocs(collection(db,name));
+    const arr=snap.docs.map(d=>({id:d.id,_ex:true,...d.data()}));
+    arr.sort((a,b)=>(a.ord??99)-(b.ord??99));
+    return arr;
+  }catch(e){ toast('Gagal memuat '+name+' — cek rules.'); return null }
+}
+async function saveColl(name,arr){
+  if(!Array.isArray(arr)){ toast('Data belum termuat — tidak menyimpan.'); return false }
+  if(!arr.length && !confirm('Daftar kosong — simpan & hapus SEMUA item di '+name+'?')) return false;
+  try{
+    const snap=await getDocs(collection(db,name));
+    const keep=new Set(arr.filter(x=>x._ex).map(x=>x.id));
+    await Promise.all(snap.docs.filter(d=>!keep.has(d.id)).map(d=>deleteDoc(doc(db,name,d.id))));
+    await Promise.all(arr.map((x,i)=>{
+      const {_ex,id,...data}=x;
+      const did=(_ex&&id)?id:(name+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7));
+      return setDoc(doc(db,name,did),{...data,ord:i});
+    }));
+    toast('Tersimpan — index.html langsung ikut berubah.');
+    return true;
+  }catch(err){ console.warn(err); toast('Gagal menyimpan '+name+' — cek rules.'); return false }
+}
+async function renderCtab(){
+  const w=$('#cwrap'); if(!w)return;
+  if(ctab==='kpi'){
+    let d={};
+    try{const s=await getDoc(doc(db,'stats','kpi')); if(s.exists())d=s.data()}catch(e){}
+    w.innerHTML=`<div class="card" style="max-width:760px">
+      <p class="mono-xs cardtitle">SEMUA ANGKA DI INDEX.HTML — HERO, STATS, BIGNUMS, DAN TEKS PROMO</p>
+      ${KPI_GROUPS.map(([g,fields])=>`
+        <div class="frow" style="margin-bottom:18px">
+          <p class="mono-xs grouplbl">${g}</p>
+          ${fields.map(([k,l])=>`<label class="cf"><span class="mono-xs">${l}</span><input type="number" min="0" data-kpi="${k}" value="${d[k]??''}" placeholder="0"></label>`).join('')}
+        </div>`).join('')}
+      <button class="btn btn-solid" id="kpiSave"><i data-lucide="save"></i> Simpan KPI</button>
+    </div>`;
+  }else if(ctab==='media'){
+    await renderMedia();
+  }else if(ctab==='batches'){
+    workB=(await loadColl('batches'))||[];
+    w.innerHTML=`<div class="card">
+      <p class="mono-xs cardtitle">BATCH ACADEMY — TAMPIL DI #/academy &amp; PILIHAN FORM PENDAFTARAN</p>
+      <div id="bRows"></div>
+      <div class="rowbtns">
+        <button class="btn btn-ghost" id="addBatch"><i data-lucide="plus"></i> Tambah batch</button>
+        <button class="btn btn-solid" id="saveBatches"><i data-lucide="save"></i> Simpan semua</button>
+      </div>
+    </div>`;
+    renderBatches();
+  }else if(ctab==='jobs'){
+    workJ=(await loadColl('jobs'))||[];
+    w.innerHTML=`<div class="card">
+      <p class="mono-xs cardtitle">LOWONGAN — TAMPIL DI #/lamar &amp; PILIHAN FORM LAMARAN</p>
+      <div id="jRows"></div>
+      <div class="rowbtns">
+        <button class="btn btn-ghost" id="addJob"><i data-lucide="plus"></i> Tambah lowongan</button>
+        <button class="btn btn-solid" id="saveJobs"><i data-lucide="save"></i> Simpan semua</button>
+      </div>
+    </div>`;
+    renderJobs();
+  }else if(ctab==='tiers'){
+    workT=(await loadColl('tiers'))||[];
+    w.innerHTML=`<div class="card">
+      <p class="mono-xs cardtitle">JENJANG KOMISI KAPSTER — TAMPIL DI #/lamar (range komisi di judul ikut dihitung dari sini)</p>
+      <div id="tRows"></div>
+      <div class="rowbtns">
+        <button class="btn btn-ghost" id="addTier"><i data-lucide="plus"></i> Tambah jenjang</button>
+        <button class="btn btn-solid" id="saveTiers"><i data-lucide="save"></i> Simpan semua</button>
+      </div>
+    </div>`;
+    renderTiers();
+  }else if(ctab==='testi'){
+    workS=(await loadColl('testimonials'))||[];
+    w.innerHTML=`<div class="card">
+      <p class="mono-xs cardtitle">TESTIMONI ACADEMY — TAMPIL DI #/academy (item pertama dipakai)</p>
+      <div id="sRows"></div>
+      <div class="rowbtns">
+        <button class="btn btn-ghost" id="addTesti"><i data-lucide="plus"></i> Tambah testimoni</button>
+        <button class="btn btn-solid" id="saveTesti"><i data-lucide="save"></i> Simpan semua</button>
+      </div>
+    </div>`;
+    renderTesti();
+  }else if(ctab==='faqs'){
+    workF=(await loadColl('faqs'))||[];
+    w.innerHTML=`<div class="card">
+      <p class="mono-xs cardtitle">FAQ FRANCHISE — TAMPIL DI #/franchise (accordion)</p>
+      <div id="fRows"></div>
+      <div class="rowbtns">
+        <button class="btn btn-ghost" id="addFaq"><i data-lucide="plus"></i> Tambah FAQ</button>
+        <button class="btn btn-solid" id="saveFaqs"><i data-lucide="save"></i> Simpan semua</button>
+      </div>
+    </div>`;
+    renderFaqs();
+  }else if(ctab==='chat'){
+    let welcome='';
+    try{const s=await getDoc(doc(db,'config','chat')); if(s.exists())welcome=s.data().welcome||''}catch(e){}
+    w.innerHTML=`<div class="card" style="max-width:640px">
+      <p class="mono-xs cardtitle">SAPAAN PEMBUKA CHAT — TAMPIL SAAT PENGUNJUNG BUKA CHAT DI INDEX.HTML</p>
+      <label class="cf"><span class="mono-xs">TEKS SAMPAI TIM MEMBALAS</span>
+        <textarea id="chatWelcome" rows="4" placeholder="Halo! Ada yang bisa dibantu soal franchise, academy, atau kapster?">${esc(welcome)}</textarea></label>
+      <div class="rowbtns">
+        <button class="btn btn-solid" id="chatSave"><i data-lucide="save"></i> Simpan</button>
+      </div>
+    </div>`;
+  }else{
+    await renderArticles();
+  }
+  icons();
+}
+function renderBatches(){
+  const el=$('#bRows'); if(!el)return;
+  el.innerHTML=workB.map((b,i)=>`
+    <div class="crow">
+      <label class="cf"><span class="mono-xs">LABEL</span><input data-bi="${i}" data-f="label" value="${esc(b.label||'')}"></label>
+      <label class="cf"><span class="mono-xs">TGL MULAI</span><input data-bi="${i}" data-f="start" value="${esc(b.start||'')}"></label>
+      <label class="cf"><span class="mono-xs">KUOTA</span><input data-bi="${i}" data-f="kom" value="${esc(b.kom||'')}"></label>
+      <label class="cf wide"><span class="mono-xs">CATATAN</span><input data-bi="${i}" data-f="p" value="${esc(b.p||'')}"></label>
+      <label class="chk"><input type="checkbox" data-bi="${i}" data-f="hot" ${b.hot?'checked':''}><span class="mono-xs">HOT</span></label>
+      <button class="delbtn" data-delb="${i}" title="Hapus batch"><i data-lucide="trash-2"></i></button>
+    </div>`).join('')||'<p class="emptynote">Belum ada batch — klik "Tambah batch".</p>';
+  icons();
+}
+function renderJobs(){
+  const el=$('#jRows'); if(!el)return;
+  el.innerHTML=workJ.map((j,i)=>`
+    <div class="crow simple">
+      <label class="cf"><span class="mono-xs">POSISI</span><input data-ji="${i}" data-f="title" value="${esc(j.title||'')}"></label>
+      <label class="cf"><span class="mono-xs">LOKASI</span><input data-ji="${i}" data-f="loc" value="${esc(j.loc||'')}"></label>
+      <label class="cf"><span class="mono-xs">GAJI/KOMISI</span><input data-ji="${i}" data-f="pay" value="${esc(j.pay||'')}"></label>
+      <button class="delbtn" data-delj="${i}" title="Hapus lowongan"><i data-lucide="trash-2"></i></button>
+    </div>`).join('')||'<p class="emptynote">Belum ada lowongan.</p>';
+  icons();
+}
+function renderTiers(){
+  const el=$('#tRows'); if(!el)return;
+  el.innerHTML=workT.map((t,i)=>`
+    <div class="crow">
+      <label class="cf"><span class="mono-xs">LABEL</span><input data-ti="${i}" data-f="no" value="${esc(t.no||'')}"></label>
+      <label class="cf"><span class="mono-xs">NAMA JENJANG</span><input data-ti="${i}" data-f="t" value="${esc(t.t||'')}"></label>
+      <label class="cf"><span class="mono-xs">KOMISI</span><input data-ti="${i}" data-f="kom" value="${esc(t.kom||'')}"></label>
+      <label class="cf wide"><span class="mono-xs">DESKRIPSI</span><input data-ti="${i}" data-f="p" value="${esc(t.p||'')}"></label>
+      <label class="chk"><input type="checkbox" data-ti="${i}" data-f="hot" ${t.hot?'checked':''}><span class="mono-xs">HOT</span></label>
+      <button class="delbtn" data-delt="${i}" title="Hapus jenjang"><i data-lucide="trash-2"></i></button>
+    </div>`).join('')||'<p class="emptynote">Belum ada jenjang komisi.</p>';
+  icons();
+}
+function renderTesti(){
+  const el=$('#sRows'); if(!el)return;
+  el.innerHTML=workS.map((s,i)=>`
+    <div class="crow two" style="margin-bottom:10px">
+      <div>
+        <label class="cf wide"><span class="mono-xs">KUTIPAN</span><textarea data-si="${i}" data-f="text" rows="3">${esc(s.text||'')}</textarea></label>
+        <label class="cf wide" style="margin-top:8px"><span class="mono-xs">SUMBER (NAMA, JABATAN, KOTA…)</span><input data-si="${i}" data-f="cite" value="${esc(s.cite||'')}"></label>
+      </div>
+      <button class="delbtn" data-dels="${i}" title="Hapus testimoni" style="align-self:start"><i data-lucide="trash-2"></i></button>
+    </div>`).join('')||'<p class="emptynote">Belum ada testimoni.</p>';
+  icons();
+}
+function renderFaqs(){
+  const el=$('#fRows'); if(!el)return;
+  el.innerHTML=workF.map((f,i)=>`
+    <div class="crow two" style="margin-bottom:10px">
+      <div>
+        <label class="cf wide"><span class="mono-xs">PERTANYAAN</span><input data-fi="${i}" data-f="q" value="${esc(f.q||'')}"></label>
+        <label class="cf wide" style="margin-top:8px"><span class="mono-xs">JAWABAN</span><textarea data-fi="${i}" data-f="a" rows="3">${esc(f.a||'')}</textarea></label>
+      </div>
+      <button class="delbtn" data-delf="${i}" title="Hapus FAQ" style="align-self:start"><i data-lucide="trash-2"></i></button>
+    </div>`).join('')||'<p class="emptynote">Belum ada FAQ.</p>';
+  icons();
+}
+
+/* ---------- ARTIKEL ---------- */
+async function renderArticles(){
+  const w=$('#cwrap'); if(!w)return;
+  try{
+    const snap=await getDocs(collection(db,'articles'));
+    workA=snap.docs.map(d=>({...d.data(),id:d.id,_ex:true,_bodyText:bodyToText(d.data().body)}));
+  }catch(e){ workA=[]; toast('Gagal memuat artikel — cek rules.') }
+  workA.sort((a,b)=>toMs(b.tsLocal||b.ts)-toMs(a.tsLocal||a.ts));
+  w.innerHTML=`<div class="card">
+    <p class="mono-xs cardtitle">ARTIKEL GONEWS — TAMPIL DI #/news</p>
+    <div id="aRows"></div>
+    <div class="rowbtns">
+      <button class="btn btn-ghost" id="addArt"><i data-lucide="plus"></i> Tulis artikel baru</button>
+    </div>
+  </div>`;
+  renderArtList();
+}
+function renderArtList(){
+  const el=$('#aRows'); if(!el)return;
+  el.innerHTML=workA.map(a=>`
+    <div class="arow">
+      <span class="mono-xs art-cat">${esc(a.cat||'—')}</span>
+      <div class="art-main">
+        <a data-editart="${a.id}">${esc(a.title||'—')} <i data-lucide="arrow-up-right"></i></a>
+        <span class="mono-xs">${(a.body||[]).length} blok · ${esc(a.date||timeAgo(a.tsLocal||a.ts))}</span>
+      </div>
+      <button class="delbtn" data-delart="${a.id}" title="Hapus artikel"><i data-lucide="trash-2"></i></button>
+    </div>`).join('')||'<p class="emptynote">Belum ada artikel — klik "Tulis artikel baru".</p>';
+  icons();
+}
+function renderArtEditor(){
+  const w=$('#cwrap'); if(!w)return;
+  const a=editingArt||{};
+  w.innerHTML=`<div class="card">
+    <p class="mono-xs cardtitle">${a._ex?'EDIT ARTIKEL':'ARTIKEL BARU'} — GONEWS</p>
+    <div class="frow">
+      <label class="cf wide"><span class="mono-xs">JUDUL</span><input id="artTitle" value="${esc(a.title||'')}"></label>
+      <label class="cf"><span class="mono-xs">KATEGORI</span><input id="artCat" value="${esc(a.cat||'')}" placeholder="misal: Tips"></label>
+      <label class="cf"><span class="mono-xs">TANGGAL (OPSIONAL)</span><input id="artDate" value="${esc(a.date||'')}" placeholder="misal: 12 Mar 2025"></label>
+      <label class="cf wide"><span class="mono-xs">ISI — "## " DI AWAL BARIS = SUB-JUDUL · BARIS KOSONG = PARAGRAF BARU</span>
+        <textarea id="artBody" rows="10">${esc(a._bodyText||'')}</textarea></label>
+    </div>
+    <div class="rowbtns">
+      <button class="btn btn-solid" id="artSave"><i data-lucide="save"></i> Simpan artikel</button>
+      <button class="btn btn-ghost" id="artCancel"><i data-lucide="arrow-left"></i> Batal</button>
+      ${a._ex?'<button class="btn btn-ghost" id="artDelete"><i data-lucide="trash-2"></i> Hapus</button>':''}
+    </div>
+  </div>`;
+  icons();
+}
+
+/* ---------- MEDIA / FOTO SITUS (CLOUDINARY) ---------- */
+async function renderMedia(){
+  const w=$('#cwrap'); if(!w)return;
+  w.innerHTML=`<div class="card">
+    <p class="mono-xs cardtitle">FOTO SITUS — UPLOAD KE CLOUDINARY (${CLOUD_NAME}) · FIRESTORE: site_media</p>
+    <div id="mediaRows">
+      ${MEDIA_SLOTS.map(([k,t,d])=>`
+      <div class="upl">
+        <div class="upl-prev" id="prev_${k}"><i data-lucide="image"></i></div>
+        <div class="upl-main">
+          <strong>${t}</strong>
+          <span class="mono-xs" style="color:var(--ink60)">${d}</span>
+          <div class="upl-bar" id="bar_${k}"><i></i></div>
+          <div class="upl-actions">
+            <button class="btn btn-ghost" data-up="${k}" type="button"><i data-lucide="upload"></i> Upload Foto</button>
+            <input type="file" id="file_${k}" accept="image/*" hidden>
+            <button class="btn btn-ghost" data-copy-media="${k}" type="button" hidden><i data-lucide="copy"></i> Copy URL</button>
+            <button class="btn btn-ghost" data-del-media="${k}" type="button" hidden><i data-lucide="trash-2"></i> Hapus</button>
+          </div>
+          <span class="upl-meta" id="meta_${k}">Belum ada foto.</span>
+        </div>
+      </div>`).join('')}
+    </div>
+    <p class="note mono-xs" style="margin-top:12px">MAKS 5MB / GAMBAR (JPG, PNG, WEBP). URL OTOMATIS DISIMPAN KE FIRESTORE — index.html LANGSUNG BACA.</p>
+  </div>`;
+  icons();
+  await Promise.all(MEDIA_SLOTS.map(([k])=>loadSlot(k)));
+}
+async function loadSlot(k){
+  try{
+    const s=await getDoc(doc(db,'site_media',k));
+    if(s.exists()&&s.data().url)paintSlot(k,s.data());
+  }catch(e){console.warn('site_media',k,e.message)}
+}
+function paintSlot(k,d){
+  const p=$('#prev_'+k); if(!p)return;
+  p.classList.add('has');
+  p.innerHTML=`<img src="${esc(d.url)}" alt="foto ${k}" loading="lazy">`;
+  const meta=$('#meta_'+k); if(meta)meta.textContent=d.url;
+  const cp=$(`#mediaRows [data-copy-media="${k}"]`), del=$(`#mediaRows [data-del-media="${k}"]`);
+  if(cp)cp.hidden=false; if(del)del.hidden=false;
+}
+async function saveMediaSlot(k,url){
+  await setDoc(doc(db,'site_media',k),{
+    url, by:ME?ME.email:'—', updatedAt:serverTimestamp(), updatedAtLocal:Date.now()
+  },{merge:true});
+}
+
+/* ================================================================
+   EVENT DELEGATION — SEMUA KONTEN DINAMIS
+   ================================================================ */
+/* input: work arrays + pencarian leads */
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='leadSearch'){ leadQ=t.value.trim().toLowerCase(); renderLeads(); return }
+  const val=t.type==='checkbox'?t.checked:t.value;
+  if(t.hasAttribute('data-bi')) workB[+t.dataset.bi][t.dataset.f]=val;
+  else if(t.hasAttribute('data-ji')) workJ[+t.dataset.ji][t.dataset.f]=val;
+  else if(t.hasAttribute('data-ti')) workT[+t.dataset.ti][t.dataset.f]=val;
+  else if(t.hasAttribute('data-si')) workS[+t.dataset.si][t.dataset.f]=val;
+  else if(t.hasAttribute('data-fi')) workF[+t.dataset.fi][t.dataset.f]=val;
+});
+
+/* change: upload file media situs */
+document.addEventListener('change',async e=>{
+  const f=e.target.closest('input[type=file][id^="file_"]'); if(!f)return;
+  const k=f.id.slice(5), file=f.files[0];
+  f.value=''; if(!file)return;
+  if(!file.type.startsWith('image/')){toast('File harus gambar (jpg/png/webp).');return}
+  if(file.size>5*1024*1024){toast('Foto kegedean — maks 5MB.');return}
+  try{
+    const url=await uploadCloudinary(file,k);
+    await saveMediaSlot(k,url);
+    paintSlot(k,{url});
+    toast('Foto '+k+' terupload.');
+  }catch(err){toast(err.message||'Upload gagal.')}
+});
+
+/* click: chat threads */
+document.addEventListener('click',e=>{
+  const it=e.target.closest('.adm-item');
+  if(it&&it.dataset.uid){ openThread(it.dataset.uid) }
+});
+
+/* click: leads — filter, csv, hapus */
+document.addEventListener('click',async e=>{
+  const t=e.target;
+  const lf=t.closest('[data-lead-filter]');
+  if(lf){ leadFilter=lf.dataset.leadFilter; $$('.chip[data-lead-filter]').forEach(x=>x.classList.toggle('act',x===lf)); renderLeads(); return }
+  if(t.closest('#leadCsv')){ exportCsv(); return }
+  const d=t.closest('[data-del]');
+  if(d){
+    if(!confirm('Hapus lead ini secara permanen?'))return;
+    try{ await deleteDoc(doc(db,d.dataset.del,d.dataset.delId)); toast('Lead dihapus.') }
+    catch(err){ toast('Gagal hapus — cek rules.') }
+    return;
+  }
+});
+
+/* click: media — upload/copy/hapus */
+document.addEventListener('click',async e=>{
+  const t=e.target;
+  const up=t.closest('[data-up]');
+  if(up){ const inp=$('#file_'+up.dataset.up); if(inp)inp.click(); return }
+  const cp=t.closest('[data-copy-media]');
+  if(cp){
+    try{
+      const s=await getDoc(doc(db,'site_media',cp.dataset.copyMedia));
+      const url=s.exists()?s.data().url:'';
+      if(!url){toast('Belum ada foto untuk di-copy.');return}
+      await navigator.clipboard.writeText(url);
+      toast('URL foto dikopi ke clipboard.');
+    }catch(err){toast('Gagal copy URL.')}
+    return;
+  }
+  const del=t.closest('[data-del-media]');
+  if(del){
+    const k=del.dataset.delMedia;
+    if(!confirm('Hapus foto '+k+'?'))return;
+    try{
+      await deleteDoc(doc(db,'site_media',k));
+      const p=$('#prev_'+k),meta=$('#meta_'+k);
+      if(p){p.classList.remove('has');p.innerHTML='<i data-lucide="image"></i>'}
+      if(meta)meta.textContent='Belum ada foto.';
+      del.hidden=true;
+      const cpb=$(`#mediaRows [data-copy-media="${k}"]`); if(cpb)cpb.hidden=true;
+      icons(); toast('Foto '+k+' dihapus.');
+    }catch(err){toast('Gagal hapus — cek rules Firestore.')}
+    return;
+  }
+});
+
+/* click: konten — tab, tambah/hapus/simpan, artikel */
+document.addEventListener('click',async e=>{
+  const t=e.target;
+
+  const ct=t.closest('[data-ctab]');
+  if(ct){
+    ctab=ct.dataset.ctab;
+    $$('.chip[data-ctab]').forEach(x=>x.classList.toggle('act',x.dataset.ctab===ctab));
+    renderCtab();
+    return;
+  }
+
+  /* tambah */
+  if(t.closest('#addBatch')){ workB.push({label:'',start:'',kom:'',p:'',hot:false}); renderBatches(); return }
+  if(t.closest('#addJob')){ workJ.push({title:'',loc:'',pay:''}); renderJobs(); return }
+  if(t.closest('#addTier')){ workT.push({no:'',t:'',kom:'',p:'',hot:false}); renderTiers(); return }
+  if(t.closest('#addTesti')){ workS.push({text:'',cite:''}); renderTesti(); return }
+  if(t.closest('#addFaq')){ workF.push({q:'',a:''}); renderFaqs(); return }
+
+  /* hapus baris */
+  const delB=t.closest('[data-delb]'); if(delB){ workB.splice(+delB.dataset.delb,1); renderBatches(); return }
+  const delJ=t.closest('[data-delj]'); if(delJ){ workJ.splice(+delJ.dataset.delj,1); renderJobs(); return }
+  const delT=t.closest('[data-delt]'); if(delT){ workT.splice(+delT.dataset.delt,1); renderTiers(); return }
+  const delS=t.closest('[data-dels]'); if(delS){ workS.splice(+delS.dataset.dels,1); renderTesti(); return }
+  const delF=t.closest('[data-delf]'); if(delF){ workF.splice(+delF.dataset.delf,1); renderFaqs(); return }
+
+  /* simpan koleksi */
+  if(t.closest('#kpiSave')){
+    const d={};
+    $$('[data-kpi]').forEach(i=>{ const v=i.value.trim(); if(v!=='')d[i.dataset.kpi]=+v });
+    try{ await setDoc(doc(db,'stats','kpi'),d,{merge:true}); toast('KPI tersimpan.') }
+    catch(err){ toast('Gagal simpan KPI — cek rules.') }
+    return;
+  }
+  if(t.closest('#saveBatches')){ if(await saveColl('batches',workB)){workB=await loadColl('batches')||[];renderBatches()} return }
+  if(t.closest('#saveJobs')){ if(await saveColl('jobs',workJ)){workJ=await loadColl('jobs')||[];renderJobs()} return }
+  if(t.closest('#saveTiers')){ if(await saveColl('tiers',workT)){workT=await loadColl('tiers')||[];renderTiers()} return }
+  if(t.closest('#saveTesti')){ if(await saveColl('testimonials',workS)){workS=await loadColl('testimonials')||[];renderTesti()} return }
+  if(t.closest('#saveFaqs')){ if(await saveColl('faqs',workF)){workF=await loadColl('faqs')||[];renderFaqs()} return }
+  if(t.closest('#chatSave')){
+    try{ await setDoc(doc(db,'config','chat'),{welcome:$('#chatWelcome').value},{merge:true}); toast('Sapaan chat tersimpan.') }
+    catch(err){ toast('Gagal simpan — cek rules.') }
+    return;
+  }
+
+  /* artikel */
+  if(t.closest('#addArt')){ editingArt={title:'',cat:'',date:'',_bodyText:''}; renderArtEditor(); return }
+  const ea=t.closest('[data-editart]');
+  if(ea){
+    e.preventDefault();
+    const a=workA.find(x=>x.id===ea.dataset.editart);
+    if(a){editingArt=a; renderArtEditor()}
+    return;
+  }
+  const da=t.closest('[data-delart]');
+  if(da){
+    if(!confirm('Hapus artikel ini?'))return;
+    try{ await deleteDoc(doc(db,'articles',da.dataset.delart)); toast('Artikel dihapus.'); editingArt=null; renderArticles() }
+    catch(err){ toast('Gagal hapus — cek rules.') }
+    return;
+  }
+  if(t.closest('#artSave')){
+    const title=$('#artTitle').value.trim();
+    if(!title){toast('Judul wajib diisi.');return}
+    const data={
+      title,
+      cat:$('#artCat').value.trim(),
+      date:$('#artDate').value.trim(),
+      body:textToBody($('#artBody').value)
+    };
+    try{
+      if(editingArt&&editingArt._ex){
+        await setDoc(doc(db,'articles',editingArt.id),data,{merge:true});
+      }else{
+        await addDoc(collection(db,'articles'),{...data,ord:Date.now(),ts:serverTimestamp(),tsLocal:Date.now()});
+      }
+      toast('Artikel tersimpan.');
+      editingArt=null;
+      renderArticles();
+    }catch(err){ toast('Gagal simpan artikel — cek rules.') }
+    return;
+  }
+  if(t.closest('#artCancel')){ editingArt=null; renderArticles(); return }
+  if(t.closest('#artDelete')){
+    if(!editingArt||!editingArt._ex)return;
+    if(!confirm('Hapus artikel ini?'))return;
+    try{ await deleteDoc(doc(db,'articles',editingArt.id)); toast('Artikel dihapus.'); editingArt=null; renderArticles() }
+    catch(err){ toast('Gagal hapus — cek rules.') }
+    return;
+  }
+});
+
+/* ================================================================
+   PROFILE DROPDOWN — AKSI
+   ================================================================ */
+const pddEl=$('#pdd');
+ $('#pbtn').addEventListener('click',e=>{
+  e.stopPropagation();
+  const open=pddEl.classList.toggle('open');
+  $('#pbtn').setAttribute('aria-expanded',open);
+});
+document.addEventListener('click',e=>{ if(!e.target.closest('.profile')) pddEl.classList.remove('open') });
+pddEl.addEventListener('click',e=>{
+  const b=e.target.closest('.pdd-item'); if(!b)return;
+  pddEl.classList.remove('open');
+  const act=b.dataset.p;
+  if(act==='view')openViewProfile();
+  else if(act==='edit')openEditProfile();
+  else if(act==='pass')globalPassToggle();
+  else if(act==='back'){ history.length>1?history.back():toast('Tidak ada riwayat sebelumnya.') }
+  else if(act==='logout')signOut(auth);
+});
+
+/* lihat / sembunyikan password (global) */
+function globalPassToggle(){
+  passVisible=!passVisible;
+  $$('input.pw').forEach(i=>i.type=passVisible?'text':'password');
+  $$('.passtoggle[data-eye]').forEach(bt=>{
+    const i=$('#'+bt.dataset.eye);
+    bt.innerHTML=`<i data-lucide="${i&&i.type==='password'?'eye':'eye-off'}"></i>`;
+  });
+  const pi=$('#passIcon'),pl=$('#passLabel');
+  if(pi)pi.innerHTML=`<i data-lucide="${passVisible?'eye-off':'eye'}"></i>`;
+  if(pl)pl.textContent=passVisible?'Sembunyikan Password':'Lihat Password';
+  icons();
+}
+/* eye toggle per-kolom */
+ $$('.passtoggle[data-eye]').forEach(b=>b.addEventListener('click',()=>{
+  const i=$('#'+b.dataset.eye); if(!i)return;
+  const show=i.type==='password';
+  i.type=show?'text':'password';
+  b.innerHTML=`<i data-lucide="${show?'eye-off':'eye'}"></i>`; icons();
+}));
+
+/* modal */
+ $$('[data-mclose]').forEach(b=>b.addEventListener('click',()=>closeAllModals()));
+ $$('.mwrap').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m)m.classList.remove('open') }));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeAllModals();closeSide();pddEl.classList.remove('open')}
+});
+
+/* simpan edit profile */
+ $('#saveProfile').addEventListener('click',async()=>{
+  const errEl=$('#editErr'); errEl.style.display='none';
+  const name=$('#editName').value.trim();
+  const email=$('#editEmail').value.trim().toLowerCase();
+  const pass=$('#editPass').value;
+  try{
+    if(pass&&pass.length<6)throw{code:'auth/weak-password'};
+    if(name!==(ME.displayName||''))await updateProfile(ME,{displayName:name});
+    if(email&&email!==ME.email){await updateEmail(ME,email);toast('Email login diganti ke '+email+'.')}
+    if(pass){await updatePassword(ME,pass);$('#editPass').value='';toast('Password diganti.')}
+    toast('Profile tersimpan.'); closeModal('mEdit'); paintAvatar();
+  }catch(e){
+    const map={
+      'auth/weak-password':'Password baru minimal 6 karakter.',
+      'auth/requires-recent-login':'Sesi login sudah lama — logout, masuk lagi, baru edit email/password.',
+      'auth/email-already-in-use':'Email itu sudah dipakai akun lain.',
+      'auth/invalid-email':'Format email tidak valid.'
+    };
+    errEl.textContent=map[e.code]||('Gagal: '+(e.code||e.message||'error tidak diketahui'));
+    errEl.style.display='block';
+  }
+});
+
+/* foto profile (Cloudinary) */
+ $('#pickAvatar').addEventListener('click',()=>$('#avatarFile').click());
+ $('#avatarFile').addEventListener('change',async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f)return;
+  if(!f.type.startsWith('image/')){toast('File harus gambar.');return}
+  if(f.size>5*1024*1024){toast('Foto kegedean — maks 5MB.');return}
+  try{
+    toast('Mengunggah foto profile…');
+    const url=await uploadCloudinary(f,null);
+    await updateProfile(ME,{photoURL:url});
+    paintAvatar(); toast('Foto profile diperbarui.');
+  }catch(err){toast(err.message||'Upload foto gagal.')}
+});
+ $('#delAvatar').addEventListener('click',async()=>{
+  try{await updateProfile(ME,{photoURL:null});paintAvatar();toast('Foto profile dihapus.')}
+  catch(e){toast('Gagal hapus foto.')}
+});
+
+/* render ikon statis awal */
+icons();
+</script>
+</body>
+</html>
